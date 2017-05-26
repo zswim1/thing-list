@@ -1,34 +1,66 @@
-import React from 'react'
+import React, { Component } from 'react'
 import ContentEditable from 'react-contenteditable'
 
 import './Thing.css'
+import Actions from './Actions'
 
-const Thing = ({ thing, saveThing, removeThing }) => {
-  const updateName = (ev) => {
-    thing.name = ev.target.value
+class Thing extends Component {
+  componentDidMount() {
+    if (!this.nameInput.htmlEl.textContent) {
+      this.nameInput.htmlEl.focus()
+    }
+  }
+
+  handleChange = (ev) => {
+    const { thing, saveThing } = this.props
+    const field = ev.currentTarget.getAttribute('name')
+    thing[field] = ev.target.value
     saveThing(thing)
   }
 
-  return (
-    <li className="Thing">
-      <input type="checkbox" value="on" />
-      <div className="details">
-        <ContentEditable
-          className="name"
-          html={thing.name}
-          onChange={updateName}
+  toggleCompletion = (ev) => {
+    const { thing, saveThing } = this.props
+    thing.completed = ev.target.checked
+    saveThing(thing)
+  }
+
+  blurOnEnter = (ev) => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault()
+      ev.target.blur()
+    }
+  }
+
+  render() {
+    const { thing, removeThing } = this.props
+
+    return (
+      <li className="Thing">
+        <input
+          type="checkbox"
+          defaultChecked={thing.completed}
+          onChange={this.toggleCompletion}
         />
-        <span className="actions">
-          <button
-            className="remove"
-            onClick={() => removeThing(thing)}
-          >
-            <i className="fa fa-trash-o"></i>
-          </button>
-        </span>
-      </div>
-    </li>
-  )
+        <div className="details">
+          <ContentEditable
+            className="name"
+            name="name"
+            html={thing.name}
+            onChange={this.handleChange}
+            onKeyPress={this.blurOnEnter}
+            ref={input => this.nameInput = input}
+          />
+          <input
+            type="date"
+            name="dueOn"
+            defaultValue={thing.dueOn}
+            onChange={this.handleChange}
+          />
+          <Actions thing={thing} removeThing={removeThing} />
+        </div>
+      </li>
+    )
+  }
 }
 
 export default Thing
